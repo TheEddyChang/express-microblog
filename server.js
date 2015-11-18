@@ -7,6 +7,31 @@ mongoose.connect('mongodb://localhost/expressblog'); //database named expressblo
 
 //require Post model
 var Post = require('./models/post'); //collection name posts is always plural
+//requring user model
+var User = require('./models/user');
+//requiring newly installed dependecenes for Auth branch
+    cookieParser = require('cookie-parser');
+    session = require('express-session');
+    passport = require('passport');
+    LocalStrategy = require('passport-local').Strategy;
+
+
+// middleware for auth
+app.use(cookieParser());
+app.use(session({
+  secret: 'supersecretkey',
+  resave: false,
+  saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+
+// passport config - allows users to sign up-login-logout
+passport.use(new LocalStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
 
 
 app.use(express.static('public'));
@@ -33,7 +58,18 @@ app.get('/api/posts', function(req, res) {
 			posts: allPosts
 		});
 
+		  Post.find()
+    .populate('comments')
+      .exec(function (err, allPosts) {
+        if (err) {
+          res.json(err);
+        } else {
+          res.json(allPosts);
+        }
+
 	});
+});
+
 });
 
 //GETTING ONE POST
@@ -127,6 +163,42 @@ app.post('/api/posts/:id/comments', function(req,res) {
  
         });
  });
+
+
+//SIGN UP ROUTE
+app.get('/signup', function (req, res) {
+  res.render('signup');
+});
+
+app.post('/signup', function (req, res) {
+  User.register(new User({ username: req.body.username }), req.body.password,
+    function (err, newUser) {
+      passport.authenticate('local')(req, res, function() {
+        res.send('signed up!!!');
+      });
+    }
+  );
+});
+
+
+// ROUTE TO RENDER THE LOGIN VIEW - AUTH ROUTES
+app.get('/login', function (req, res) {
+  res.render('login');
+});
+//route to handle logging in existing users
+app.post('/login', passport.authenticate('local'), function (req, res) {
+  res.send('logged in!!!');
+});
+
+// log out user
+app.get('/logout', function (req, res) {
+  req.logout();
+  res.redirect('/');
+});
+//SHOW USER PROFILE PAGE
+app.get('/profile', function (req, res) {
+  res.render('profile', { user: req.user });
+});
 
 
 
