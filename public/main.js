@@ -108,16 +108,23 @@ $(function() {
 	});
 
 
+	
+//name of input should be attribute of comments if using serialize	!
 	//POSTING COMMENTS
-	$('.comment-form').on('submit', function(event) {
+	$('body').on('submit', '.comment-form', function(event) { 
+		console.log("FORM SUBMITTING");
 		event.preventDefault();
 		//serialize form data
+		var postId = $(this).attr("data-id");//local
 
 		var newComment = $(this).serialize();
 		//POST request to create new book
-		$.comment('/api/posts/:id/comments', newComment, function(data) {
+		$.post('/api/posts/' + postId + '/comments', newComment, function(data) {//:id is for server
 			console.log(data);
-			allComments.push(data);
+			var foundPost = allPosts.filter(function(post) {
+				return post._id == postId;
+			})[0];
+			foundPost.comments.push(data);
 			render();
 		});
 
@@ -126,7 +133,6 @@ $(function() {
 		$postform.find('input').first().focus();
 
 	});
-
 
 
 
