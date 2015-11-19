@@ -40,9 +40,28 @@ p {
 	background-size: cover;
 	border-radius: 0px;
 	height: 500px;
-	width: 1470px;
+	width: 100%;
 	margin-top: -20px;
 } 
+
+.signup {
+  width: 20%;
+  margin-top: -200px;
+  margin-left: 350px;
+
+}
+.login {
+  width: 20%;
+  margin-top: -200px;
+  margin-left: 350px;
+ 
+}
+
+.submit-signup {
+  margin-left: 200px;
+
+}
+
 
 .bat{
 	margin-top: 100px;

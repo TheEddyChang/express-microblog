@@ -10,18 +10,18 @@ var Post = require('./models/post'); //collection name posts is always plural
 //requring user model
 var User = require('./models/user');
 //requiring newly installed dependecenes for Auth branch
-    cookieParser = require('cookie-parser');
-    session = require('express-session');
-    passport = require('passport');
-    LocalStrategy = require('passport-local').Strategy;
+cookieParser = require('cookie-parser');
+session = require('express-session');
+passport = require('passport');
+LocalStrategy = require('passport-local').Strategy;
 
 
 // middleware for auth
 app.use(cookieParser());
 app.use(session({
-  secret: 'supersecretkey',
-  resave: false,
-  saveUninitialized: false
+	secret: 'supersecretkey',
+	resave: false,
+	saveUninitialized: false
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -53,22 +53,12 @@ app.get('/', function(req, res) {
 app.get('/api/posts', function(req, res) {
 	console.log("hello");
 	// find all posts in db
+	//TODO add comments to posts
 	Post.find(function(err, allPosts) {
 		res.json({
 			posts: allPosts
 		});
-
-		  Post.find()
-    .populate('comments')
-      .exec(function (err, allPosts) {
-        if (err) {
-          res.json(err);
-        } else {
-          res.json(allPosts);
-        }
-
 	});
-});
 
 });
 
@@ -139,19 +129,15 @@ app.get('/api/posts/:id/comments', function(req, res) {
 
 });
 
-
-
-
-
-
-
 //ADDING IMBEDDED COMMENT ROUTE
-app.post('/api/posts/:id/comments', function(req,res) {
+app.post('/api/posts/:id/comments', function(req, res) {
 	var PostId = req.params.id;
-	Post.findOne({ _id: PostId}, function(err, foundPost) {
+	Post.findOne({
+		_id: PostId
+	}, function(err, foundPost) {
 		//create new comment
 		var newComment = new Comment(req.body);
-		
+
 		//saving comment adds it to the comments collection
 		newComment.save();
 		//give it to foundPost comments
@@ -159,55 +145,110 @@ app.post('/api/posts/:id/comments', function(req,res) {
 		//save foundPost with new comment added
 		foundPost.save();
 		res.json(newComment);
-	
- 
-        });
- });
+
+
+	});
+});
 
 
 //SIGN UP ROUTE
-app.get('/signup', function (req, res) {
-  res.render('signup');
+app.get('/signup', function(req, res) {
+	res.render('signup');
 });
 
-app.post('/signup', function (req, res) {
-  User.register(new User({ username: req.body.username }), req.body.password,
-    function (err, newUser) {
-      passport.authenticate('local')(req, res, function() {
-        res.send('signed up!!!');
-      });
-    }
-  );
+
+//AUTH -- if user is logged in, dont let them see signup view
+app.get('/signup', function(req, res) {
+
+	if (req.user) {
+		res.redirect('/profile');
+	} else {
+		res.render('signup', {
+			user: req.user
+		});
+	}
 });
+
+app.post('/signup', function(req, res) {
+	User.register(new User({
+			username: req.body.username
+		}), req.body.password,
+		function(err, newUser) {
+			passport.authenticate('local')(req, res, function() {
+				// res.send('signed up!!!');
+				res.redirect('/profile');
+			});
+		}
+	);
+});
+
 
 
 // ROUTE TO RENDER THE LOGIN VIEW - AUTH ROUTES
-app.get('/login', function (req, res) {
-  res.render('login');
+app.get('/login', function(req, res) {
+	res.render('login');
 });
 //route to handle logging in existing users
-app.post('/login', passport.authenticate('local'), function (req, res) {
-  res.send('logged in!!!');
+app.post('/login', passport.authenticate('local'), function(req, res) {
+	res.redirect('/profile');
 });
+
+//is user logged in, dont let them see login view
+app.get('/login, function', function(req, res) {
+
+	if (req.user) {
+		res.redirect('/profile');
+	} else {
+		res.render('login', {
+			user: req.user
+		});
+	}
+});
+
+
 
 // log out user
-app.get('/logout', function (req, res) {
-  req.logout();
-  res.redirect('/');
+app.get('/logout', function(req, res) {
+	req.logout();
+	res.redirect('/');
 });
 //SHOW USER PROFILE PAGE
-app.get('/profile', function (req, res) {
-  res.render('profile', { user: req.user });
+app.get('/profile', function(req, res) {
+	res.render('profile', {
+		user: req.user
+	});
+});
+
+//only show profile is user is logged in
+app.get('/profile, function', function(req, res) {
+
+	if (req.user) {
+		res.render('/profile', {
+			user: req.user
+		});
+	} else {
+		res.redirect('/login');
+	}
 });
 
 
 
+// app.post('/signup', function (req, res) {
+//   User.register(new User({ username: req.body.username }), req.body.password,
+//     function (err, newUser) {
+//       passport.authenticate('local')(req, res, function() {
+//         // res.send('signed up!!!');
+//         res.redirect('/profile');
+//       });
+//     }
+//   );
+// });
 
-
-
-
-
-
+// // log in user
+// app.post('/login', passport.authenticate('local'), function (req, res) {
+//   // res.send('logged in!!!');
+//   res.redirect('/profile');
+// });
 
 
 
